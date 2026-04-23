@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Law Assessment Admin Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #F4EFE9;
+            font-family: 'Inter', sans-serif;
+            color: #1E2A32;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0A2F3A;
+            border-bottom: 3px solid #D4AF37;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+        .token-section {
+            background: #f0eae0;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .status {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+            background: #ddd;
+        }
+        .status.active { background: #2ecc71; color: white; }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #0A2F3A;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #ccc;
+            border-radius: 14px;
+            font-family: inherit;
+        }
+        button {
+            background: #0A2F3A;
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        button:hover { background: #D4AF37; color: #0A2F3A; }
+        .message {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .test-list {
+            margin-top: 2rem;
+            border-top: 2px solid #e0d6c8;
+            padding-top: 1rem;
+        }
+        .test-item {
+            background: #faf6ef;
+            border-radius: 1rem;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .test-info small { color: #6c757d; }
+        .test-actions button {
+            padding: 0.3rem 0.8rem;
+            margin-left: 0.5rem;
+            font-size: 0.8rem;
+        }
+        hr { margin: 1rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1><i class="fas fa-gavel"></i> Admin Portal – Law Assessments</h1>
+    <p style="margin-bottom: 1rem;">Manage <strong>Civil, Corporate, Land, Criminal, Family Law</strong> test papers. Changes are synced to <code>https://www.ldclionhunter.com/IndividualAssessment.html</code>.</p>
+
+    <div class="token-section">
+        <div><i class="fab fa-github"></i> <strong>hunter9201/I</strong></div>
+        <div>
+            <span id="tokenStatus" class="status">⚠️ No token</span>
+            <button id="setTokenBtn" style="margin-left: 0.5rem;"><i class="fas fa-key"></i> Set Token</button>
+        </div>
+    </div>
+
+    <div id="adminMsg"></div>
+
+    <div class="form-group">
+        <label>Test Code *</label>
+        <input id="testCode" placeholder="e.g., CIV-2025-01, CORP-M&A-02">
+    </div>
+    <div class="form-group">
+        <label>Full Test Name *</label>
+        <input id="testName" placeholder="e.g., Civil Procedure – Interim Applications">
+    </div>
+    <div class="form-group">
+        <label>Legal Subject *</label>
+        <select id="testSubject">
+            <option value="Civil Law">Civil Law</option>
+            <option value="Corporate Law">Corporate Law</option>
+            <option value="Land Law">Land Law</option>
+            <option value="Criminal Law">Criminal Law</option>
+            <option value="Family Law">Family Law</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+    <div class="form-group" id="customSubjectGroup" style="display:none;">
+        <label>Custom Subject Name</label>
+        <input id="customSubjectInput" placeholder="e.g., International Law">
+    </div>
+    <div class="form-group">
+        <label>Description / Topics</label>
+        <textarea id="testDesc" rows="2" placeholder="Key areas assessed, case law references, difficulty..."></textarea>
+    </div>
+    <div class="form-group">
+        <label>Question Paper PDF</label>
+        <input type="file" id="testPdf" accept=".pdf">
+        <div class="inline-help" style="font-size:0.7rem; margin-top:4px;">Upload PDF for new test; leave empty to keep existing file when editing.</div>
+    </div>
+
+    <button id="saveBtn"><i class="fas fa-upload"></i> Save / Update Test</button>
+    <button id="cancelEditBtn" style="background:#8B3A3A; margin-left: 0.5rem;"><i class="fas fa-times"></i> Cancel Edit</button>
+
+    <div class="test-list">
+        <h3>Existing Law Assessments</h3>
+        <div id="testListContainer">Loading...</div>
+    </div>
+</div>
+
+<script>
+    // ========== CONFIGURATION ==========
+    const REPO_OWNER = "hunter9201";
+    const REPO_NAME = "I";
+    const BRANCH = "main";
+    const JSON_PATH = "tests.json";
+    const PDF_FOLDER = "tests_pdfs/";
+
+    let githubToken = localStorage.getItem("test_gh_token") || "";
+    let allTests = [];
+    let editingId = null;
+
+    // GitHub API helpers
+    function ghHeaders() {
+        const headers = { "Accept": "application/vnd.github+json" };
+        if (githubToken) headers["Authorization"] = "Bearer " + githubToken;
+        return headers;
+    }
+
+    async function ghGetContents(path) {
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${encodeURIComponent(path)}?ref=${BRANCH}`;
+        const res = await fetch(url, { headers: ghHeaders() });
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error(`GET failed: ${res.status}`);
+        return await res.json();
+    }
+
+    async function ghPutContents(path, contentBase64, message, sha = null) {
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${encodeURIComponent(path)}`;
+        const body = { message, content: contentBase64, branch: BRANCH };
+        if (sha) body.sha = sha;
+        const res = await fetch(url, { method: "PUT", headers: { ...ghHeaders(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error(`PUT failed: ${res.status}`);
+        return res.json();
+    }
+
+    async function uploadPDF(file, filename) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const binary = reader.result;
+                const base64 = btoa(new Uint8Array(binary).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+                let sha = null;
+                try {
+                    const existing = await ghGetContents(PDF_FOLDER + filename);
+                    if (existing && existing.sha) sha = existing.sha;
+                } catch(e) {}
+                await ghPutContents(PDF_FOLDER + filename, base64, `Upload law assessment PDF: ${filename}`, sha);
+                resolve();
+            };
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    function toBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
+    function fromBase64(b64) { return decodeURIComponent(escape(atob(b64))); }
+
+    async function loadTests() {
+        try {
+            const data = await ghGetContents(JSON_PATH);
+            if (data && data.content) {
+                allTests = JSON.parse(fromBase64(data.content));
+            } else {
+                allTests = [];
+            }
+            renderTestList();
+        } catch (err) {
+            showMessage("Error loading tests: " + err.message, "error");
+        }
+    }
+
+    async function saveTestsToGitHub(testsArray, commitMsg) {
+        const existing = await ghGetContents(JSON_PATH);
+        const sha = existing ? existing.sha : null;
+        const contentBase64 = toBase64(JSON.stringify(testsArray, null, 2));
+        await ghPutContents(JSON_PATH, contentBase64, commitMsg, sha);
+        allTests = testsArray;
+    }
+
+    function renderTestList() {
+        const container = document.getElementById('testListContainer');
+        if (!allTests.length) {
+            container.innerHTML = '<p>No tests yet. Add your first law assessment above.</p>';
+            return;
+        }
+        container.innerHTML = '';
+        allTests.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'test-item';
+            div.innerHTML = `
+                <div class="test-info">
+                    <strong>${escapeHtml(t.testCode)}</strong> — ${escapeHtml(t.testName)}<br>
+                    <small>Subject: ${escapeHtml(t.subject)} | PDF: ${t.pdfFile}</small>
+                </div>
+                <div class="test-actions">
+                    <button onclick="editTest(${t.id})">✏️ Edit</button>
+                    <button onclick="deleteTest(${t.id})" style="background:#8B3A3A;">🗑️ Delete</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    window.editTest = (id) => {
+        const test = allTests.find(t => t.id === id);
+        if (!test) return;
+        document.getElementById('testCode').value = test.testCode;
+        document.getElementById('testName').value = test.testName;
+        const subjSelect = document.getElementById('testSubject');
+        if ([...subjSelect.options].some(opt => opt.value === test.subject)) {
+            subjSelect.value = test.subject;
+            document.getElementById('customSubjectGroup').style.display = 'none';
+        } else {
+            subjSelect.value = "Other";
+            document.getElementById('customSubjectGroup').style.display = 'block';
+            document.getElementById('customSubjectInput').value = test.subject;
+        }
+        document.getElementById('testDesc').value = test.description || '';
+        document.getElementById('testPdf').value = '';
+        editingId = id;
+        showMessage(`Editing: ${test.testCode}. Select a new PDF only if you want to replace the file.`, "success");
+    };
+
+    window.deleteTest = async (id) => {
+        if (!confirm("Delete this test permanently?")) return;
+        const test = allTests.find(t => t.id === id);
+        if (!test) return;
+        const newList = allTests.filter(t => t.id !== id);
+        try {
+            await saveTestsToGitHub(newList, `Delete law test: ${test.testCode}`);
+            await loadTests();
+            showMessage(`Deleted "${test.testCode}"`, "success");
+        } catch (err) {
+            showMessage("Delete failed: " + err.message, "error");
+        }
+    };
+
+    async function saveHandler() {
+        if (!githubToken) {
+            showMessage("❌ Please set your GitHub token first (click 'Set Token').", "error");
+            return;
+        }
+        const testCode = document.getElementById('testCode').value.trim();
+        const testName = document.getElementById('testName').value.trim();
+        let subject = document.getElementById('testSubject').value;
+        const customSubject = document.getElementById('customSubjectInput').value.trim();
+        const description = document.getElementById('testDesc').value.trim();
+        const pdfFile = document.getElementById('testPdf').files[0];
+
+        if (!testCode || !testName) {
+            showMessage("Test Code and Test Name are required.", "error");
+            return;
+        }
+        if (subject === "Other" && !customSubject) {
+            showMessage("Please enter a custom subject name.", "error");
+            return;
+        }
+        if (subject === "Other") subject = customSubject;
+
+        // Uniqueness check for code (ignore current if editing)
+        if (!editingId && allTests.some(t => t.testCode.toLowerCase() === testCode.toLowerCase())) {
+            showMessage(`Test code "${testCode}" already exists. Use a unique code.`, "error");
+            return;
+        }
+        if (editingId && allTests.some(t => t.id !== editingId && t.testCode.toLowerCase() === testCode.toLowerCase())) {
+            showMessage(`Test code "${testCode}" already used by another test.`, "error");
+            return;
+        }
+
+        let uploadedPdfName = null;
+        if (pdfFile) {
+            if (pdfFile.type !== 'application/pdf') {
+                showMessage("Only PDF files are allowed.", "error");
+                return;
+            }
+            const timestamp = Date.now();
+            uploadedPdfName = `${timestamp}_${pdfFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+            await uploadPDF(pdfFile, uploadedPdfName);
+        }
+
+        if (editingId !== null) {
+            const index = allTests.findIndex(t => t.id === editingId);
+            if (index !== -1) {
+                const updated = { ...allTests[index], testCode, testName, subject, description };
+                if (uploadedPdfName) updated.pdfFile = uploadedPdfName;
+                allTests[index] = updated;
+                await saveTestsToGitHub(allTests, `Update law test: ${testCode}`);
+                showMessage(`✅ Test "${testCode}" updated.`, "success");
+                resetForm();
+                await loadTests();
+            }
+        } else {
+            if (!uploadedPdfName) {
+                showMessage("Please select a PDF question paper for the new test.", "error");
+                return;
+            }
+            const newId = allTests.length ? Math.max(...allTests.map(t => t.id)) + 1 : 1;
+            const newTest = {
+                id: newId,
+                testCode,
+                testName,
+                subject,
+                description: description || "",
+                pdfFile: uploadedPdfName,
+                addedDate: Date.now()
+            };
+            const newList = [...allTests, newTest];
+            await saveTestsToGitHub(newList, `Add law test: ${testCode}`);
+            showMessage(`✅ Test "${testCode}" added.`, "success");
+            resetForm();
+            await loadTests();
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('testCode').value = '';
+        document.getElementById('testName').value = '';
+        document.getElementById('testSubject').value = 'Civil Law';
+        document.getElementById('customSubjectGroup').style.display = 'none';
+        document.getElementById('customSubjectInput').value = '';
+        document.getElementById('testDesc').value = '';
+        document.getElementById('testPdf').value = '';
+        editingId = null;
+    }
+
+    function showMessage(msg, type) {
+        const div = document.getElementById('adminMsg');
+        div.innerHTML = `<div class="message ${type}">${msg}</div>`;
+        setTimeout(() => div.innerHTML = '', 4000);
+    }
+
+    function updateTokenUI() {
+        const hasToken = githubToken && githubToken.length > 10;
+        const statusSpan = document.getElementById('tokenStatus');
+        if (hasToken) {
+            statusSpan.innerHTML = "🔑 Token active";
+            statusSpan.classList.add('active');
+        } else {
+            statusSpan.innerHTML = "⚠️ No token";
+            statusSpan.classList.remove('active');
+        }
+    }
+
+    function promptForToken() {
+        const token = prompt("Enter your GitHub Personal Access Token (needs 'repo' scope):");
+        if (token && token.trim()) {
+            githubToken = token.trim();
+            localStorage.setItem("test_gh_token", githubToken);
+            updateTokenUI();
+            loadTests();
+            showMessage("Token saved. You can now upload tests.", "success");
+        }
+    }
+
+    document.getElementById('setTokenBtn').addEventListener('click', promptForToken);
+    document.getElementById('saveBtn').addEventListener('click', saveHandler);
+    document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+    document.getElementById('testSubject').addEventListener('change', function() {
+        const customGroup = document.getElementById('customSubjectGroup');
+        customGroup.style.display = this.value === "Other" ? "block" : "none";
+    });
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
+
+    // Initial load
+    updateTokenUI();
+    loadTests();
+</script>
+</body>
+</html>
